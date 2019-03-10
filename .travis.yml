@@ -1,0 +1,22 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t learndockerkube/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run learndockerkube/react-test npm test -- --coverage
+
+after_success:
+  - docker build -t learndockerkube/multi-client ./client
+  - docker build -t learndockerkube/multi-nginx ./nginx
+  - docker build -t learndockerkube/multi-server ./server
+  - docker build -t learndockerkube/multi-worker ./worker
+  # Login
+  - echo "$DOCKER_PASS" | docker login -u "$DOCKER_ID" --password-stdin
+  # Push
+  - docker push learndockerkube/multi-client
+  - docker push learndockerkube/multi-nginx
+  - docker push learndockerkube/multi-server
+  - docker push learndockerkube/multi-worker
